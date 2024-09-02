@@ -1,2 +1,5 @@
 fasthtml-example-main/
 data/
+.env
+.sesskey
+.DS_Store
