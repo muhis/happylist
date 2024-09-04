@@ -108,4 +108,4 @@ async def get_todo(id:int):
     return Div(Div(todo.title), btn)
 
 
-if __name__ == '__main__': serve()
+if __name__ == '__main__': serve(port=8080)
