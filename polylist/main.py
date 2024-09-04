@@ -42,7 +42,7 @@ async def get_todos(req):
     add = Form(Group(mk_input(), Button("Add")),
                hx_post="/", target_id=id_list, hx_swap="beforeend")
     cards = Card(Ul(*TODO_LIST, id=id_list),
-                header=add, footer=Div(id=id_curr))
+                footer=add)
     
     return Titled('Polylist!', cards)
 
@@ -72,10 +72,12 @@ def find_todo(id): return next(o for o in TODO_LIST if o.id==id)
 @app.get("/edit/{id}")
 async def edit_item(id:int):
     todo = find_todo(id)
-    edit_form = Form(
+    group = Group(
         Input(id="title", name="title", value=todo.title),
-        Hidden(id="id", name="id", value=str(todo.id)),
-        Button("Save", type="Submit"),
+        Button("Save", type="Submit")
+    ) 
+    edit_form = Form(
+        group,
         hx_put=f"/update/{id}", 
         hx_target="closest li",
         hx_swap="innerHTML",
