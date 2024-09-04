@@ -18,10 +18,16 @@ class TodoItem():
                      hx_target=f'#{tid(self.id)}',
                      hx_swap='outerHTML')
 
-        show = AX(self.title, f'/todos/{self.id}', id_curr)
-        
-        edit = AX('edit',     f'/edit/{self.id}' , id_curr)
-        return Li(checkbox, show, ' | ', edit, id=tid(self.id))
+        show = Div(self.title, 
+               hx_get=f'/edit/{self.id}', 
+               hx_trigger='click',
+               hx_target='this',
+               hx_swap='outerHTML',
+               style="display: inline-block; margin-left: 10px;")
+    
+        return Li(Div(checkbox,
+                      show, 
+                      style="display: flex; align-items: center; width: 100%;"), id=tid(self.id))
 
 TODO_LIST = [TodoItem(id=0, title="Start writing todo list", done=True),
              TodoItem(id=1, title="???", done=False),
@@ -66,11 +72,23 @@ def find_todo(id): return next(o for o in TODO_LIST if o.id==id)
 @app.get("/edit/{id}")
 async def edit_item(id:int):
     todo = find_todo(id)
-    res = Form(Group(Input(id="title"), Button("Save")),
-        Hidden(id="id"), CheckboxX(id="done", label='Done'),
-        hx_put="/", target_id=tid(id), id="edit")
-    fill_form(res, todo)
-    return res
+    edit_form = Form(
+        Input(id="title", name="title", value=todo.title),
+        Hidden(id="id", name="id", value=str(todo.id)),
+        Button("Save", type="Submit"),
+        hx_put=f"/update/{id}", 
+        hx_target="closest li",
+        hx_swap="innerHTML",
+    )
+
+    return edit_form
+
+
+@app.put("/update/{id}")
+async def update_item(id: int, todo: TodoItem):
+    existing_todo = find_todo(id)
+    fill_dataclass(todo, existing_todo)
+    return existing_todo
 
 @app.put("/")
 async def update(todo: TodoItem):
@@ -90,4 +108,4 @@ async def get_todo(id:int):
     return Div(Div(todo.title), btn)
 
 
-if __name__ == '__main__': serve()
+if __name__ == '__main__': serve(port=8080)
