@@ -1,37 +1,18 @@
 # Run with: python app.py
 from dataclasses import dataclass
-from starlette.background import BackgroundTasks
-from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group,
-                             Hidden, Input, Li, Titled, Ul, fast_app,
+from polylist.lists import ListItem
+from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,
+                             Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title,
                              fill_dataclass, fill_form, serve)
 from polylist.emoji_from_todo import get_emoji_for_todo
 id_curr = 'current-todo'
 id_list = 'todo-list'
 def tid(id): return f'todo-{id}'
 
-@dataclass
-class TodoItem():
-    title: str; id: int = -1; done: bool = False
-    def __ft__(self):
-        checkbox = CheckboxX(id=f'done-{self.id}', checked=self.done, 
-                     hx_post=f'/toggle/{self.id}', 
-                     hx_target=f'#{tid(self.id)}',
-                     hx_swap='outerHTML')
 
-        show = Div(self.title, 
-               hx_get=f'/edit/{self.id}', 
-               hx_trigger='click',
-               hx_target='this',
-               hx_swap='outerHTML',
-               style="display: inline-block; margin-left: 10px;")
-    
-        return Li(Div(checkbox,
-                      show, 
-                      style="display: flex; align-items: center; width: 100%;"), id=tid(self.id))
-
-TODO_LIST = [TodoItem(id=0, title="Start writing todo list", done=True),
-             TodoItem(id=1, title="???", done=False),
-             TodoItem(id=2, title="Profit", done=False)]
+TODO_LIST = [ListItem(id=0, title="Start writing todo list", done=True),
+             ListItem(id=1, title="???", done=False),
+             ListItem(id=2, title="Profit", done=False)]
 
 app, rt = fast_app()
 
@@ -39,22 +20,28 @@ def mk_input(**kw): return Input(id="new-title", name="title", placeholder="New 
 
 @app.get("/")
 async def get_todos(req):
+    poly_list_title = Ul(Li(H1("Polylist"), hx_get="/", hx_target="body"))
+    nav_bar_items = Ul(Li(A("New Note", href="#about")), Li(A("About", href="#")))
+
+    nav_bar = Nav(poly_list_title, nav_bar_items)
     add = Form(Group(mk_input(), Button("Add")),
                hx_post="/", target_id=id_list, hx_swap="beforeend")
     cards = Card(Ul(*TODO_LIST, id=id_list),
                 footer=add)
     
-    return Titled('Polylist!', cards)
+    return Title("Polylist"), Main(nav_bar, cards, cls="container")
+
+
 
 @app.post("/")
-async def add_item(todo:TodoItem):
+async def add_item(todo:ListItem):
     todo.id = len(TODO_LIST)+1
     await populate_emojies(todo)
     TODO_LIST.append(todo)
     return todo, mk_input(hx_swap_oob='true')
 
 
-async def populate_emojies(todo: TodoItem):
+async def populate_emojies(todo: ListItem):
     emojies = await get_emoji_for_todo(todo.title)
     todo.title = f"{todo.title} - {emojies}"
     return todo
@@ -87,13 +74,13 @@ async def edit_item(id:int):
 
 
 @app.put("/update/{id}")
-async def update_item(id: int, todo: TodoItem):
+async def update_item(id: int, todo: ListItem):
     existing_todo = find_todo(id)
     fill_dataclass(todo, existing_todo)
     return existing_todo
 
 @app.put("/")
-async def update(todo: TodoItem):
+async def update(todo: ListItem):
     fill_dataclass(todo, find_todo(todo.id))
     return todo, clr_details()
 
