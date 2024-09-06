@@ -2,6 +2,8 @@ from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Gro
                              Hidden, Input, Li, Titled, Ul, fast_app, Fieldset,
                              fill_dataclass, fill_form, serve)
 from dataclasses import dataclass
+from polylist.common import mk_list_item_input
+
 import randomname
 
 id_curr = 'current-todo'
@@ -36,8 +38,13 @@ class PolyList():
     items: list[ListItem]
     name: str
     def __ft__(self):
-        add = Form(Group(mk_input(), Button("Add")),
+        add = Form(Group(mk_list_item_input(), Button("Add")),
             hx_post="/", target_id=id_list, hx_swap="beforeend")
         cards = Card(Ul(*TODO_LIST, id=id_list),
                     footer=add)
         return Div(Titled(f"{self.name}")),
+
+
+TODO_LIST = [ListItem(id=0, title="Start writing todo list", done=True),
+             ListItem(id=1, title="???", done=False),
+             ListItem(id=2, title="Profit", done=False)]

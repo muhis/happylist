@@ -1,30 +1,33 @@
 # Run with: python app.py
 from dataclasses import dataclass
-from polylist.lists import ListItem
+from polylist.common import mk_list_item_input
+from polylist.lists import ListItem, TODO_LIST
 from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,
                              Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title,
-                             fill_dataclass, fill_form, serve)
+                             fill_dataclass, fill_form, serve, H3)
 from polylist.emoji_from_todo import get_emoji_for_todo
 id_curr = 'current-todo'
 id_list = 'todo-list'
 def tid(id): return f'todo-{id}'
 
 
-TODO_LIST = [ListItem(id=0, title="Start writing todo list", done=True),
-             ListItem(id=1, title="???", done=False),
-             ListItem(id=2, title="Profit", done=False)]
+def mk_navigation_bar():
+    poly_list_title = Ul(Li(H1("Polylist"), hx_get="/", hx_target="body"))
+    add_new_note_button = Li(A(H3("+", cls="contrast"), href="#New", cls="secondary outline"))
+    about_button = Li(A(H3("About", href="#")))
+
+    nav_bar_items = Ul(add_new_note_button, about_button)
+
+    nav_bar = Nav(poly_list_title, nav_bar_items)
+    return nav_bar
+
 
 app, rt = fast_app()
 
-def mk_input(**kw): return Input(id="new-title", name="title", placeholder="New Todo", **kw)
-
 @app.get("/")
 async def get_todos(req):
-    poly_list_title = Ul(Li(H1("Polylist"), hx_get="/", hx_target="body"))
-    nav_bar_items = Ul(Li(A("New Note", href="#about")), Li(A("About", href="#")))
-
-    nav_bar = Nav(poly_list_title, nav_bar_items)
-    add = Form(Group(mk_input(), Button("Add")),
+    nav_bar = mk_navigation_bar()
+    add = Form(Group(mk_list_item_input(), Button("Add")),
                hx_post="/", target_id=id_list, hx_swap="beforeend")
     cards = Card(Ul(*TODO_LIST, id=id_list),
                 footer=add)
@@ -38,7 +41,7 @@ async def add_item(todo:ListItem):
     todo.id = len(TODO_LIST)+1
     await populate_emojies(todo)
     TODO_LIST.append(todo)
-    return todo, mk_input(hx_swap_oob='true')
+    return todo, mk_list_item_input(hx_swap_oob='true')
 
 
 async def populate_emojies(todo: ListItem):
