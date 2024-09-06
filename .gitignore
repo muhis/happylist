@@ -56,3 +56,4 @@ htmlcov/
 .cache
 coverage.xml
 *.cover
+polylist/__pycache__/
