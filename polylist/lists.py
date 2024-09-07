@@ -7,7 +7,7 @@ from polylist.common import mk_list_item_input
 import randomname
 
 id_curr = 'current-todo'
-id_list = 'todo-list'
+list_ul = 'list-ul'
 def tid(id): return f'todo-{id}'
 
 
@@ -37,14 +37,39 @@ class ListItem():
 class PolyList():
     items: list[ListItem]
     name: str
+
     def __ft__(self):
-        add = Form(Group(mk_list_item_input(), Button("Add")),
-            hx_post="/", target_id=id_list, hx_swap="beforeend")
-        cards = Card(Ul(*TODO_LIST, id=id_list),
-                    footer=add)
-        return Div(Titled(f"{self.name}")),
+        return self.as_card()
+
+    def add_item_form(self):
+        return Form(Group(mk_list_item_input(), Button("Add")),
+               hx_post="/", target_id=list_ul, hx_swap="beforeend")
+        
+    @classmethod
+    def get_by_name(cls, name):
+        try:
+            poly_list = lists[name]
+        except KeyError:
+            if not name:
+                name = randomname.get_name()
+            poly_list = PolyList([], name)
+            lists[name] = poly_list
+        return poly_list
+
+    def as_ul(self):
+        return Ul(*self.items, id=list_ul)
+
+    def as_card(self):
+        return Card(self.as_ul(), footer=self.add_item_form())
 
 
 TODO_LIST = [ListItem(id=0, title="Start writing todo list", done=True),
              ListItem(id=1, title="???", done=False),
              ListItem(id=2, title="Profit", done=False)]
+
+
+lists = {
+    "work": PolyList(TODO_LIST, "Work"),
+    "home": PolyList(TODO_LIST, "Home"),
+    "other": PolyList(TODO_LIST, "Other"),
+}
