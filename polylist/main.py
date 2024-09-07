@@ -1,60 +1,79 @@
 # Run with: python app.py
 from dataclasses import dataclass
-from starlette.background import BackgroundTasks
-from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group,
-                             Hidden, Input, Li, Titled, Ul, fast_app,
-                             fill_dataclass, fill_form, serve)
+from polylist.common import mk_list_item_input
+from polylist.lists import ListItem, TODO_LIST, PolyList
+from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,H2, Aside, Img,
+                             Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title, Style, Script, Link,
+                             fill_dataclass, fill_form, serve, H3)
+from starlette.staticfiles import StaticFiles
 from polylist.emoji_from_todo import get_emoji_for_todo
+import randomname
+
 id_curr = 'current-todo'
 id_list = 'todo-list'
 def tid(id): return f'todo-{id}'
 
-@dataclass
-class TodoItem():
-    title: str; id: int = -1; done: bool = False
-    def __ft__(self):
-        checkbox = CheckboxX(id=f'done-{self.id}', checked=self.done, 
-                     hx_post=f'/toggle/{self.id}', 
-                     hx_target=f'#{tid(self.id)}',
-                     hx_swap='outerHTML')
 
-        show = Div(self.title, 
-               hx_get=f'/edit/{self.id}', 
-               hx_trigger='click',
-               hx_target='this',
-               hx_swap='outerHTML',
-               style="display: inline-block; margin-left: 10px;")
+def generate_share_script():
+    return Script("""
+    var reply_click = function (listName) {
+        if (navigator.share) {
+            navigator.share({
+                title: listName,
+                text: listName + '@Polylist',
+                url: window.location.href
+            })
+        }
+    }
+    """)
+
+
+def mk_navigation_bar(note_name: str):
+    polylist_elemet = H2("Polylist/")
+    share_button = Img(
+        src="polylist/static/share-android.svg",
+        alt="Share",
+        cls="share-svg",
+        onclick=f"reply_click('{note_name}')",
+        role="button",
+    )
+    note_name_element = H3(f"{note_name} ", share_button)
+    note_title_element = Aside(polylist_elemet, note_name_element)
     
-        return Li(Div(checkbox,
-                      show, 
-                      style="display: flex; align-items: center; width: 100%;"), id=tid(self.id))
+    poly_list_title = Ul(Li(H3(f"{note_name}")), Li(H2("@Polylist"), hx_get="/", hx_target="body"))
+    add_new_note_button = Li(A(H3("+", cls="contrast"), href=f"/{randomname.generate()}", cls="secondary outline"))
+    about_button = Li(A(H3("About", href="#")))
 
-TODO_LIST = [TodoItem(id=0, title="Start writing todo list", done=True),
-             TodoItem(id=1, title="???", done=False),
-             TodoItem(id=2, title="Profit", done=False)]
+    nav_bar_items = Ul(add_new_note_button, about_button)
+
+    nav_bar = Nav(note_title_element, nav_bar_items)
+    return nav_bar
+
 
 app, rt = fast_app()
+app.mount("/static", StaticFiles(directory="polylist/static"), name="static")
 
-def mk_input(**kw): return Input(id="new-title", name="title", placeholder="New Todo", **kw)
 
-@app.get("/")
-async def get_todos(req):
-    add = Form(Group(mk_input(), Button("Add")),
-               hx_post="/", target_id=id_list, hx_swap="beforeend")
-    cards = Card(Ul(*TODO_LIST, id=id_list),
-                footer=add)
+@app.get("/{note_name:str}")
+async def get_todos(req, note_name: str):
+    share_script = generate_share_script()
+    nav_bar = mk_navigation_bar(note_name=note_name)
     
-    return Titled('Polylist!', cards)
+    poly_list = PolyList.get_by_name(note_name)
+    
+    return Title("Polylist"), Main(nav_bar, poly_list, share_script, cls="container")
+
+
 
 @app.post("/")
-async def add_item(todo:TodoItem):
+async def add_item(todo:ListItem):
     todo.id = len(TODO_LIST)+1
     await populate_emojies(todo)
     TODO_LIST.append(todo)
-    return todo, mk_input(hx_swap_oob='true')
+    return todo, mk_list_item_input(hx_swap_oob='true')
 
 
-async def populate_emojies(todo: TodoItem):
+async def populate_emojies(todo: ListItem):
     emojies = await get_emoji_for_todo(todo.title)
     todo.title = f"{todo.title} - {emojies}"
     return todo
@@ -87,13 +106,13 @@ async def edit_item(id:int):
 
 
 @app.put("/update/{id}")
-async def update_item(id: int, todo: TodoItem):
+async def update_item(id: int, todo: ListItem):
     existing_todo = find_todo(id)
     fill_dataclass(todo, existing_todo)
     return existing_todo
 
 @app.put("/")
-async def update(todo: TodoItem):
+async def update(todo: ListItem):
     fill_dataclass(todo, find_todo(todo.id))
     return todo, clr_details()
 
