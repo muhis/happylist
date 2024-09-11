@@ -1,14 +1,14 @@
 # Run with: python app.py
 from dataclasses import dataclass
 from polylist.common import mk_list_item_input
-from polylist.lists import ListItem, TODO_LIST, PolyList
+from polylist.lists import ListItem, PolyList
 from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,H2, Aside, Img,
-                             Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title, Style, Script, Link,
+                             Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title, Style, Script, Link, 
                              fill_dataclass, fill_form, serve, H3)
 from starlette.staticfiles import StaticFiles
 from polylist.emoji_from_todo import get_emoji_for_todo
 import randomname
-
+from polylist import logging_backend
 id_curr = 'current-todo'
 id_list = 'todo-list'
 def tid(id): return f'todo-{id}'
@@ -39,8 +39,6 @@ def mk_navigation_bar(note_name: str):
     )
     note_name_element = H3(f"{note_name} ", share_button)
     note_title_element = Aside(polylist_elemet, note_name_element)
-    
-    poly_list_title = Ul(Li(H3(f"{note_name}")), Li(H2("@Polylist"), hx_get="/", hx_target="body"))
     add_new_note_button = Li(A(H3("+", cls="contrast"), href=f"/{randomname.generate()}", cls="secondary outline"))
     about_button = Li(A(H3("About", href="#")))
 
@@ -65,12 +63,13 @@ async def get_todos(req, note_name: str):
 
 
 
-@app.post("/")
-async def add_item(todo:ListItem):
-    todo.id = len(TODO_LIST)+1
-    await populate_emojies(todo)
-    TODO_LIST.append(todo)
-    return todo, mk_list_item_input(hx_swap_oob='true')
+@app.post("/{name}")
+async def add_item(title:str, name:str):
+    poly_list = PolyList.get_by_name(name)
+    _, id = poly_list.add_item(title=title)
+    rendered_list_item = poly_list.render_item(id)
+    poly_list.schedule_updating_emojies(id)
+    return rendered_list_item, mk_list_item_input(hx_swap_oob='true')
 
 
 async def populate_emojies(todo: ListItem):
@@ -78,26 +77,25 @@ async def populate_emojies(todo: ListItem):
     todo.title = f"{todo.title} - {emojies}"
     return todo
 
-@app.post("/toggle/{id}")
-async def toggle_todo(id: int):
-    todo = find_todo(id)
-    todo.done = not todo.done
-    return todo
+@app.post("/{name}/toggle/{id}")
+async def toggle_todo(name:str, id: int):
+    poly_list = PolyList.get_by_name(name)
+    poly_list.toggle_item(id)
+    return poly_list.render_item(id)
 
 
-def clr_details(): return Div(hx_swap_oob='innerHTML', id=id_curr)
-def find_todo(id): return next(o for o in TODO_LIST if o.id==id)
+@app.get("/{name}/edit/{id}")
+async def edit_item(name:str, id:int):
+    polylist = PolyList.get_by_name(name)
+    list_item = polylist.get_item_by_id(id)
 
-@app.get("/edit/{id}")
-async def edit_item(id:int):
-    todo = find_todo(id)
     group = Group(
-        Input(id="title", name="title", value=todo.title),
+        Input(id="title", name="title", value=list_item.title),
         Button("Save", type="Submit")
     ) 
     edit_form = Form(
         group,
-        hx_put=f"/update/{id}", 
+        hx_put=f"{name}/update/{id}", 
         hx_target="closest li",
         hx_swap="innerHTML",
     )
@@ -105,20 +103,21 @@ async def edit_item(id:int):
     return edit_form
 
 
-@app.put("/update/{id}")
-async def update_item(id: int, todo: ListItem):
-    existing_todo = find_todo(id)
-    fill_dataclass(todo, existing_todo)
-    return existing_todo
+@app.put("/{name}/update/{id}")
+async def update_item(name: str, id: int, title: str):
+    poly_list = PolyList.get_by_name(name)
+    poly_list.update_item(id, title)
+    return poly_list.render_item(id)
 
 @app.put("/")
 async def update(todo: ListItem):
     fill_dataclass(todo, find_todo(todo.id))
     return todo, clr_details()
 
-@app.delete("/todos/{id}")
-async def del_todo(id:int):
-    TODO_LIST.remove(find_todo(id))
+@app.delete("/{name}/{id}")
+async def del_todo(name:str, id:int):
+    PolyList.get_by_name(name).delete_item(id)
+
     return clr_details()
 
 @app.get("/todos/{id}")

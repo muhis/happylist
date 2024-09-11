@@ -1,9 +1,9 @@
 from langchain_openai import OpenAI
-from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.language_models import BaseLanguageModel
-from polylist import config
+import logging
+logger = logging.getLogger(__name__)
+
 
 def create_emoji_prompt():
     """Create and return the PromptTemplate for emoji generation."""
@@ -22,6 +22,7 @@ async def get_emoji_for_todo(todo: str, llm: BaseLanguageModel | None= None) -> 
     """
     if llm is None:
         llm = OpenAI(temperature=0)
+    logger.info(f"Getting emoji for todo: {todo}")
     prompt = create_emoji_prompt()
     results = await llm.ainvoke(prompt.format_prompt(todo=todo).to_string()) or "❓"
     
