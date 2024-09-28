@@ -40,7 +40,7 @@ def mk_navigation_bar(note_name: str):
     )
     note_name_element = P(f"{note_name} ", share_button)
     note_title_element = Hgroup(polylist_elemet, note_name_element)
-    add_new_note_button = Li(A(H3("+", cls="contrast"), href=f"/{randomname.generate()}", cls="secondary outline"))
+    add_new_note_button = Li(A(H3("+", cls="contrast"), href=f"/new", cls="secondary outline"))
     about_button = Li(A(H3("About", href="#")))
 
     nav_bar_items = Ul(add_new_note_button, about_button)
@@ -55,10 +55,10 @@ app.mount("/static", StaticFiles(directory="polylist/static"), name="static")
 @app.get("/")
 async def index(req):
     new_note = PolyList.new_welcome_note()
-    return RedirectResponse(url=f"/{new_note.name}")
+    return RedirectResponse(url=f"/list/{new_note.name}")
 
 
-@app.get("/{note_name:str}")
+@app.get("/list/{note_name:str}")
 async def get_todos(req, note_name: str):
     share_script = generate_share_script()
     nav_bar = mk_navigation_bar(note_name=note_name)
@@ -80,10 +80,10 @@ def make_404(note_name: str):
 @app.get("/new")
 async def new_list(req):
     note = PolyList.new()
-    return RedirectResponse(url=f"/{note.name}")
+    return RedirectResponse(url=f"/list/{note.name}")
 
 
-@app.post("/{name}")
+@app.post("/list/{name}")
 async def add_item(title:str, name:str):
     poly_list = PolyList.get_by_name(name)
     _, id = poly_list.add_item(title=title)
@@ -97,14 +97,14 @@ async def populate_emojies(todo: ListItem):
     todo.title = f"{todo.title} - {emojies}"
     return todo
 
-@app.post("/{name}/toggle/{id}")
+@app.post("/list/{name}/toggle/{id}")
 async def toggle_todo(name:str, id: int):
     poly_list = PolyList.get_by_name(name)
     poly_list.toggle_item(id)
     return poly_list.render_item(id)
 
 
-@app.get("/{name}/edit/{id}")
+@app.get("/list/{name}/edit/{id}")
 async def edit_item(name:str, id:int):
     polylist = PolyList.get_by_name(name)
     list_item = polylist.get_item_by_id(id)
@@ -115,7 +115,7 @@ async def edit_item(name:str, id:int):
     ) 
     edit_form = Form(
         group,
-        hx_put=f"{name}/update/{id}", 
+        hx_put=f"/list/{name}/update/{id}", 
         hx_target="closest li",
         hx_swap="innerHTML",
     )
@@ -123,7 +123,7 @@ async def edit_item(name:str, id:int):
     return edit_form
 
 
-@app.put("/{name}/update/{id}")
+@app.put("/list/{name}/update/{id}")
 async def update_item(name: str, id: int, title: str):
     poly_list = PolyList.get_by_name(name)
     poly_list.update_item(id, title)

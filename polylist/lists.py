@@ -33,7 +33,7 @@ class PolyList():
 
     def add_item_form(self):
         return Form(Group(mk_list_item_input(), Button("Add")),
-               hx_post=f"/{self.name}", target_id=list_ul, hx_swap="beforeend")
+               hx_post=f"/list/{self.name}", target_id=list_ul, hx_swap="beforeend")
         
     @classmethod
     def get_by_name(cls, name):
@@ -64,13 +64,13 @@ class PolyList():
     def render_item(self, id: int):
         item = self.items[id]
         checkbox = CheckboxX(id=f'done-{id}', checked=item.done, 
-                     hx_post=f'{self.name}/toggle/{id}', 
+                     hx_post=f'/list/{self.name}/toggle/{id}', 
                      hx_target=f'#todo-{id}',
                      hx_swap='outerHTML')
 
         show = Div(
             item.title, 
-            hx_get=f'{self.name}/edit/{id}', 
+            hx_get=f'/list/{self.name}/edit/{id}', 
             hx_trigger='click',
             hx_target='this',
             hx_swap='outerHTML',
@@ -128,7 +128,7 @@ WELCOME_NOTE = [
     ("Hit 'Add' to include new treasures to your list.", False, "➕"),
     ("Tap '+' to start a fresh shopping quest.", False, "🎉"),
     ("Note: This is a beta version—enjoy exploring and share your feedback!", False, "🚧"),
-    ("")
+    ("Made by Mohammed Salman", True, "👨‍💻"),
 ]
 
 
