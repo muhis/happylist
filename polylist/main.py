@@ -30,27 +30,17 @@ def generate_share_script():
 
 
 def mk_navigation_bar(note_name: str):
-    polylist_elemet = H2("Happyl.ist")
-    share_button = Img(
-        src="polylist/static/share-android.svg",
-        alt="Share",
-        cls="share-svg",
-        onclick=f"reply_click('{note_name}')",
-        role="button",
-    )
-    note_name_element = P(f"{note_name} ", share_button)
-    note_title_element = Hgroup(polylist_elemet, note_name_element)
+    polylist_elemet = Li(H2(A("Happyl.ist", href=f"/", cls="contrast")))
     add_new_note_button = Li(A(H3("+", cls="contrast"), href=f"/new", cls="secondary outline"))
-    about_button = Li(A(H3("About", href="#")))
+    about_button = Li(A(H3("About"), href="/about"))
 
     nav_bar_items = Ul(add_new_note_button, about_button)
 
-    nav_bar = Nav(note_title_element, nav_bar_items)
+    nav_bar = Nav(polylist_elemet, nav_bar_items)
     return nav_bar
 
 
 app, rt = fast_app()
-app.mount("/static", StaticFiles(directory="polylist/static"), name="static")
 
 @app.get("/")
 async def index(req):
@@ -82,6 +72,11 @@ async def new_list(req):
     note = PolyList.new()
     return RedirectResponse(url=f"/list/{note.name}")
 
+
+@app.get("/about")
+async def about(req):
+    happy_list = PolyList.new_about_note()
+    return RedirectResponse(url=f"/list/{happy_list.name}")
 
 @app.post("/list/{name}")
 async def add_item(title:str, name:str):

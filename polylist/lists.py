@@ -1,5 +1,5 @@
-from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group,
-                             Hidden, Input, Li, Titled, Ul, fast_app, Fieldset, Small,
+from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, H4, Strong,
+                             Hidden, Input, Li, Titled, Ul, fast_app, Fieldset, Small, Nav, A,
                              fill_dataclass, fill_form, serve)
 from dataclasses import dataclass, field
 from polylist.common import mk_list_item_input
@@ -13,6 +13,14 @@ id_curr = 'current-todo'
 list_ul = 'list-ul'
 def tid(id): return f'todo-{id}'
 
+
+def make_list_nav_bar(list_name:str):
+    return Nav(
+        Ul(Li(H4(list_name))),
+        Ul(
+            Li(Strong(A("Share ➡️👥", onclick=f"reply_click('{list_name}')")))
+        )
+    )
 
 @dataclass
 class ListItem():
@@ -43,6 +51,13 @@ class PolyList():
     def new_welcome_note(cls):
         poly_list = cls.new()
         [poly_list.add_item(title, done, emojies) for title, done, emojies in WELCOME_NOTE]
+        return poly_list
+
+    @classmethod
+    def new_about_note(cls):
+        poly_list = cls.new()
+        [poly_list.add_item(title, done, emojies) for title, done, emojies in ABOUT_NOTE]
+        poly_list.add_item(title=f"Currently serving {len(lists)} happy list!", done=True, emojies="🤝🚀📋")
         return poly_list
 
     @classmethod
@@ -86,7 +101,8 @@ class PolyList():
         return Ul(*[self.render_item(id) for id in range(len(self.items))], id=list_ul)
 
     def as_card(self):
-        return Card(self.as_ul(), footer=self.add_item_form())
+        header = make_list_nav_bar(self.name)
+        return Card(self.as_ul(), header=header, footer=self.add_item_form())
     
     def get_item_by_id(self, id):
         return self.items[id]
@@ -128,7 +144,14 @@ WELCOME_NOTE = [
     ("Hit 'Add' to include new treasures to your list.", False, "➕"),
     ("Tap '+' to start a fresh shopping quest.", False, "🎉"),
     ("Note: This is a beta version—enjoy exploring and share your feedback!", False, "🚧"),
+]
+
+ABOUT_NOTE = [
     ("Made by Mohammed Salman", True, "👨‍💻"),
+    ("Testing AI applications and integrating them into everyday life", True, "🧠"),
+    ("Exploring the creation of small but potent products", True, "💡"),
+    ("Follow me on www.linkedin.com/in/m-salman/", True, "🤝"),
+    ("This app is open-source! Find the code on https://github.com/muhis/happylist.", False, "🛠️"),
 ]
 
 
