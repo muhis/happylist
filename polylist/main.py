@@ -1,15 +1,26 @@
 # Run with: python app.py
 from polylist.common import mk_list_item_input
 from polylist.lists import ListItem, PolyList
-from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,H2, Aside, Img, P,
+from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,H2, Aside, Img, P, Html, Link,
                              Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title, Style, Script, Link, Hgroup,
                              fill_dataclass, fill_form, serve, H3)
 from polylist.emoji_from_todo import get_emoji_for_todo
 from starlette.responses import RedirectResponse
 from polylist import logging_backend
+from starlette.responses import FileResponse
+from starlette.staticfiles import StaticFiles
 id_curr = 'current-todo'
 id_list = 'todo-list'
 def tid(id): return f'todo-{id}'
+
+
+def create_favicon_links():
+    link1 = Link(rel="apple-touch-icon", sizes="180x180", href="polylist/static/apple-touch-icon.png")
+    link2 = Link(rel="icon", type="image/png", sizes="32x32", href="polylist/static/favicon-32x32.png")
+    link3 = Link(rel="icon", type="image/png", sizes="16x16", href="polylist/static/favicon-16x16.png")
+    link4 = Link(rel="manifest", href="polylist/static/site.webmanifest")
+    return link1 , link2,  link3,  link4
+
 
 
 def generate_share_script():
@@ -38,6 +49,7 @@ def mk_navigation_bar():
 
 
 app, rt = fast_app()
+app.mount("/static", StaticFiles(directory="./polylist/static/"), name="static")
 
 @app.get("/")
 async def index(req):
@@ -47,6 +59,7 @@ async def index(req):
 
 @app.get("/list/{note_name:str}")
 async def get_todos(req, note_name: str):
+    favicon_links = create_favicon_links()
     share_script = generate_share_script()
     nav_bar = mk_navigation_bar()
     try:
@@ -54,7 +67,7 @@ async def get_todos(req, note_name: str):
     except KeyError:
         note = make_404(note_name)
 
-    return Title(f"Happyl.ist: {note_name}"), Main(nav_bar, note, share_script, cls="container")
+    return Title(f"Happyl.ist: {note_name}"), Main(nav_bar, note, share_script, favicon_links, cls="container")
 
 
 def make_404(note_name: str):
