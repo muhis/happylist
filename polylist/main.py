@@ -1,14 +1,11 @@
 # Run with: python app.py
-from dataclasses import dataclass
 from polylist.common import mk_list_item_input
 from polylist.lists import ListItem, PolyList
 from fasthtml.common import (AX, Button, Card, CheckboxX, Div, Footer, Form, Group, Main, H1,H2, Aside, Img, P,
                              Hidden, Input, Li, Titled, Ul, fast_app, Nav, Strong, A, Title, Style, Script, Link, Hgroup,
                              fill_dataclass, fill_form, serve, H3)
-from starlette.staticfiles import StaticFiles
 from polylist.emoji_from_todo import get_emoji_for_todo
 from starlette.responses import RedirectResponse
-import randomname
 from polylist import logging_backend
 id_curr = 'current-todo'
 id_list = 'todo-list'
@@ -20,8 +17,8 @@ def generate_share_script():
     var reply_click = function (listName) {
         if (navigator.share) {
             navigator.share({
-                title: listName,
-                text: listName + '@Polylist',
+                title: 'Sharing ' + listName + ' On Happyl.ist',
+                text: 'I am sharing list ' + listName + ' with you on Happylist, you can now see or edit the list!',
                 url: window.location.href
             })
         }
@@ -29,10 +26,10 @@ def generate_share_script():
     """)
 
 
-def mk_navigation_bar(note_name: str):
+def mk_navigation_bar():
     polylist_elemet = Li(H2(A("Happyl.ist", href=f"/", cls="contrast")))
     add_new_note_button = Li(A(H3("+", cls="contrast"), href=f"/new", cls="secondary outline"))
-    about_button = Li(A(H3("About"), href="/about"))
+    about_button = Li(H3(A("About", href="/about")))
 
     nav_bar_items = Ul(add_new_note_button, about_button)
 
@@ -51,7 +48,7 @@ async def index(req):
 @app.get("/list/{note_name:str}")
 async def get_todos(req, note_name: str):
     share_script = generate_share_script()
-    nav_bar = mk_navigation_bar(note_name=note_name)
+    nav_bar = mk_navigation_bar()
     try:
         note = PolyList.get_by_name(note_name)
     except KeyError:

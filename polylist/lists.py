@@ -18,7 +18,7 @@ def make_list_nav_bar(list_name:str):
     return Nav(
         Ul(Li(H4(list_name))),
         Ul(
-            Li(Strong(A("Share ➡️👥", onclick=f"reply_click('{list_name}')")))
+            Li(Button("Share 📤", onclick=f"reply_click('{list_name}')"))
         )
     )
 
@@ -139,9 +139,10 @@ class PolyList():
 WELCOME_NOTE = [
     ("Welcome to HappyList!", True, "👋"),
     ("Turn shopping into a fun adventure with your little helper!", False, "🛍️"),
-    ("Tap an item to edit it and watch the magic unfold.", False, "✨"),
+    ("Tap an item text to edit it and watch the magic unfold.", False, "✨"),
     ("Check off items as you discover them together.", False, "✅"),
     ("Hit 'Add' to include new treasures to your list.", False, "➕"),
+    ("When adding or editing an item, HappyList will find appropriate emojies for you", False, "⚡"),
     ("Tap '+' to start a fresh shopping quest.", False, "🎉"),
     ("Note: This is a beta version—enjoy exploring and share your feedback!", False, "🚧"),
 ]
@@ -151,7 +152,7 @@ ABOUT_NOTE = [
     ("Testing AI applications and integrating them into everyday life", True, "🧠"),
     ("Exploring the creation of small but potent products", True, "💡"),
     ("Follow me on www.linkedin.com/in/m-salman/", True, "🤝"),
-    ("This app is open-source! Find the code on https://github.com/muhis/happylist.", False, "🛠️"),
+    ("This app is open-source! Find the code on https://github.com/muhis/happylist", True, "🛠️"),
 ]
 
 
