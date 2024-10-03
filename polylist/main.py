@@ -15,10 +15,10 @@ def tid(id): return f'todo-{id}'
 
 
 def create_favicon_links():
-    link1 = Link(rel="apple-touch-icon", sizes="180x180", href="polylist/static/apple-touch-icon.png")
-    link2 = Link(rel="icon", type="image/png", sizes="32x32", href="polylist/static/favicon-32x32.png")
-    link3 = Link(rel="icon", type="image/png", sizes="16x16", href="polylist/static/favicon-16x16.png")
-    link4 = Link(rel="manifest", href="polylist/static/site.webmanifest")
+    link1 = Link(rel="apple-touch-icon", sizes="180x180", href="apple-touch-icon.png")
+    link2 = Link(rel="icon", type="image/png", sizes="32x32", href="favicon-32x32.png")
+    link3 = Link(rel="icon", type="image/png", sizes="16x16", href="favicon-16x16.png")
+    link4 = Link(rel="manifest", href="site.webmanifest")
     return link1 , link2,  link3,  link4
 
 
@@ -49,7 +49,12 @@ def mk_navigation_bar():
 
 
 app, rt = fast_app()
-app.mount("/static", StaticFiles(directory="./polylist/static/"), name="static")
+
+
+@rt("/{fname}.{ext}")
+def get(fname, ext):
+    return FileResponse(f"static/{fname}.{ext}")
+
 
 @app.get("/")
 async def index(req):
