@@ -57,7 +57,7 @@ class PolyList():
     def new_about_note(cls):
         poly_list = cls.new()
         [poly_list.add_item(title, done, emojies) for title, done, emojies in ABOUT_NOTE]
-        poly_list.add_item(title=f"Currently serving {len(lists)} happy list!", done=True, emojies="🤝🚀📋")
+        poly_list.add_item(title=f"{len(lists)} happy lists so far!", done=True, emojies="🤝🚀📋")
         return poly_list
 
     @classmethod
@@ -138,21 +138,23 @@ class PolyList():
 
 WELCOME_NOTE = [
     ("Welcome to HappyList!", True, "👋"),
-    ("Turn shopping into a fun adventure with your little helper!", False, "🛍️"),
-    ("Tap an item text to edit it and watch the magic unfold.", False, "✨"),
-    ("Check off items as you discover them together.", False, "✅"),
-    ("Hit 'Add' to include new treasures to your list.", False, "➕"),
-    ("When adding or editing an item, HappyList will find appropriate emojies for you", False, "⚡"),
-    ("Tap '+' to start a fresh shopping quest.", False, "🎉"),
-    ("Note: This is a beta version—enjoy exploring and share your feedback!", False, "🚧"),
+    ("Make shopping fun!", False, "🛍️"),
+    ("Tap to edit and see magic.", False, "✨"),
+    ("Check off items as you go.", False, "✅"),
+    ("Tap 'Add' for new treasures.", False, "➕"),
+    ("HappyList adds emojis!", False, "⚡"),
+    ("Tap '+' for a new quest.", False, "🎉"),
+    ("This is test application!", False, "🚧"),
 ]
+
+
 
 ABOUT_NOTE = [
     ("Made by Mohammed Salman", True, "👨‍💻"),
-    ("Testing AI applications and integrating them into everyday life", True, "🧠"),
-    ("Exploring the creation of small but potent products", True, "💡"),
-    ("Follow me on www.linkedin.com/in/m-salman/", True, "🤝"),
-    ("This app is open-source! Find the code on https://github.com/muhis/happylist", True, "🛠️"),
+    ("Testing AI in life", True, "🧠"),
+    ("Building small products", True, "💡"),
+    ("linkedin.com/in/m-salman/", True, "🤝"),
+    ("github.com/muhis/happylist", True, "🛠️"),
 ]
 
 
